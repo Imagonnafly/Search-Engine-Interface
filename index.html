@@ -41,7 +41,7 @@
                     </div>
                 </div>
                 
-                <input type="text" name="q" id="search-input" class="search-input" placeholder="Query the magical scroll... (Press '/' to focus)" autofocus autocomplete="off">
+                <input type="text" name="q" id="search-input" class="search-input" placeholder="Query the scroll... (Press '/' to focus)" autofocus autocomplete="off">
                 
                 <button type="button" id="voice-btn" class="voice-search-btn" title="Chant your command...">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="mic-svg">
@@ -50,10 +50,9 @@
                     </svg>
                 </button>
 
-                <!-- Past Memory Context Window -->
                 <div id="recent-searches" class="recent-searches-dropdown">
-                    <div class="recent-header">
-                        <span class="recent-title"><i class="fas fa-history"></i> Past Memory</span>
+                    <div class="recent-header" id="dropdown-header-pane">
+                        <span class="recent-title" id="dropdown-title-text"><i class="fas fa-history"></i> Past Memory</span>
                         <button type="button" id="clear-history-btn" class="clear-history-btn">Wipe All</button>
                     </div>
                     <div id="recent-tags-wrapper" class="recent-tags-wrapper"></div>
@@ -139,6 +138,8 @@
         const searchInput = document.getElementById('search-input');
         const searchBoxWrapper = document.getElementById('search-box-wrapper');
         const recentContainer = document.getElementById('recent-searches');
+        const dropdownHeaderPane = document.getElementById('dropdown-header-pane');
+        const dropdownTitleText = document.getElementById('dropdown-title-text');
         
         let activeRealmId = localStorage.getItem('activeRealmId') || 'realm-google';
 
@@ -175,7 +176,7 @@
                     </button>
                     <div class="realm-action-buttons">
                         ${!realm.id.startsWith('realm-') ? `
-                            <button type="button" class="realm-edit-btn" data-id="${realm.id}" title="Alter Realm"><i class="fas fa-pen" style="font-size:10px;"></i></button>
+                            <button type="button" class="realm-edit-btn" data-id="${realm.id}" title="Alter Realm"><i class="fas fa-pen"></i></button>
                             <button type="button" class="realm-shatter-btn" data-id="${realm.id}" title="Shatter Realm">&times;</button>
                         ` : ''}
                     </div>
@@ -191,6 +192,7 @@
                     activeRealmId = realm.id;
                     localStorage.setItem('activeRealmId', activeRealmId);
                     loadRealms();
+                    handleSearchInputUpdate();
                     searchInput.focus();
                 });
 
@@ -235,7 +237,7 @@
         });
 
         // ==========================================================================
-        // 4. Global Hotkeys & Dropdown Blur Listeners
+        // 4. Global Hotkeys & Dismissal Observers
         // ==========================================================================
         document.addEventListener('keydown', (e) => {
             if (e.key === '/' && document.activeElement !== searchInput) {
@@ -262,6 +264,16 @@
                 realmDropdown.classList.remove('show');
             }
         });
+
+        document.addEventListener('touchstart', (e) => {
+            if (!e.target.closest('.search-input-wrapper')) {
+                recentContainer.classList.remove('show');
+                searchBoxWrapper.classList.remove('dropdown-active');
+            }
+            if (!e.target.closest('.realm-selector-container')) {
+                realmDropdown.classList.remove('show');
+            }
+        }, { passive: true });
 
         // ==========================================================================
         // 5. Unified Modal Construction Engine
@@ -401,8 +413,8 @@
                     </div>
                     <span>${name}</span>
                 </a>
-                <button class="edit-shortcut-btn" title="Alter insignia"><i class="fas fa-pen"></i></button>
-                <button class="delete-shortcut-btn" title="Shatter insignia">&times;</button>
+                <button type="button" class="edit-shortcut-btn" title="Alter insignia"><i class="fas fa-pen"></i></button>
+                <button type="button" class="delete-shortcut-btn" title="Shatter insignia">&times;</button>
             `;
 
             div.querySelector('.edit-shortcut-btn').addEventListener('click', (e) => {
@@ -413,6 +425,7 @@
 
             div.querySelector('.delete-shortcut-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 removeShortcut(id);
             });
             
@@ -435,20 +448,85 @@
         }
 
         // ==========================================================================
-        // 7. Past Memory Dropdown Logic
+        // 7. Context Dropdown Engine (Autocomplete Suggestions / Memory)
         // ==========================================================================
         const recentTagsWrapper = document.getElementById('recent-tags-wrapper');
         const clearHistoryBtn = document.getElementById('clear-history-btn');
+        let autocompleteDebounceTimer;
+
+        // Global callback vector exposed for Google Autocomplete API
+        window.processSearchSuggestions = function(data) {
+            const queryPredictions = data[1] || [];
+            renderAutocompleteRows(queryPredictions);
+        };
+
+        function fetchLiveSuggestions(query) {
+            // Clean up any stale script anchors
+            const existingScript = document.getElementById('jsonp-suggest-script');
+            if (existingScript) existingScript.remove();
+
+            if (!query.trim()) {
+                displayRecentSearches();
+                return;
+            }
+
+            // Create script node to route around Cross-Origin Policies (CORS)
+            const script = document.createElement('script');
+            script.id = 'jsonp-suggest-script';
+            script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=processSearchSuggestions`;
+            document.body.appendChild(script);
+        }
+
+        function renderAutocompleteRows(predictions) {
+            recentTagsWrapper.innerHTML = '';
+            
+            if (predictions.length === 0) {
+                recentContainer.classList.remove('show');
+                searchBoxWrapper.classList.remove('dropdown-active');
+                return;
+            }
+
+            dropdownHeaderPane.classList.add('hide-clear');
+            dropdownTitleText.innerHTML = `<i class="fas fa-wand-magic-sparkles"></i> Predicted Intents`;
+
+            predictions.forEach((term, index) => {
+                const row = document.createElement('div');
+                row.className = 'recent-dropdown-row';
+                row.style.setProperty('--row-index', index);
+                row.innerHTML = `
+                    <div class="recent-row-content">
+                        <i class="fas fa-search autocomplete-suggest-lens"></i>
+                        <span class="recent-text-node">${term}</span>
+                    </div>
+                `;
+
+                row.addEventListener('click', () => {
+                    searchInput.value = term;
+                    saveSearchQuery(term);
+                    searchForm.submit();
+                });
+
+                recentTagsWrapper.appendChild(row);
+            });
+
+            recentContainer.classList.add('show');
+            searchBoxWrapper.classList.add('dropdown-active');
+        }
 
         function displayRecentSearches() {
             const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
             recentTagsWrapper.innerHTML = ''; 
 
-            if (history.length === 0) {
-                recentContainer.classList.remove('show');
-                searchBoxWrapper.classList.remove('dropdown-active');
+            if (history.length === 0 || searchInput.value.trim() !== '') {
+                if (searchInput.value.trim() === '') {
+                    recentContainer.classList.remove('show');
+                    searchBoxWrapper.classList.remove('dropdown-active');
+                }
                 return;
             }
+
+            dropdownHeaderPane.classList.remove('hide-clear');
+            dropdownTitleText.innerHTML = `<i class="fas fa-history"></i> Past Memory`;
 
             history.forEach((term, index) => {
                 const row = document.createElement('div');
@@ -475,6 +553,22 @@
 
                 recentTagsWrapper.appendChild(row);
             });
+
+            recentContainer.classList.add('show');
+            searchBoxWrapper.classList.add('dropdown-active');
+        }
+
+        function handleSearchInputUpdate() {
+            const value = searchInput.value;
+            clearTimeout(autocompleteDebounceTimer);
+            
+            if (value.trim()) {
+                autocompleteDebounceTimer = setTimeout(() => {
+                    fetchLiveSuggestions(value);
+                }, 150); // Fluid debounce framework prevents keystroke congestion
+            } else {
+                displayRecentSearches();
+            }
         }
 
         function saveSearchQuery(query) {
@@ -484,7 +578,6 @@
             history.unshift(query.trim());
             if (history.length > 6) history.pop();
             localStorage.setItem('searchHistory', JSON.stringify(history));
-            displayRecentSearches();
         }
 
         function removeSearchTerm(term) {
@@ -501,14 +594,8 @@
             }
         }
 
-        searchInput.addEventListener('focus', () => {
-            const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
-            if (history.length > 0) {
-                recentContainer.classList.add('show');
-                searchBoxWrapper.classList.add('dropdown-active');
-                realmDropdown.classList.remove('show');
-            }
-        });
+        searchInput.addEventListener('input', handleSearchInputUpdate);
+        searchInput.addEventListener('focus', handleSearchInputUpdate);
 
         searchForm.addEventListener('submit', () => saveSearchQuery(searchInput.value));
         
@@ -536,12 +623,12 @@
 
             recognition.onstart = () => {
                 voiceBtn.classList.add('listening');
-                searchInput.placeholder = "Chant your search intent now...";
+                searchInput.placeholder = "Chant your intent now...";
                 searchInput.value = "";
             };
             recognition.onend = () => {
                 voiceBtn.classList.remove('listening');
-                searchInput.placeholder = "Query the magical scroll...";
+                searchInput.placeholder = "Query the scroll...";
             };
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
@@ -563,7 +650,7 @@
             }
         });
 
-        // Initial Load Hooks
+        // Initialize Engine
         loadRealms();
         loadShortcuts();
         displayRecentSearches();
