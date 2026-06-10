@@ -1,0 +1,952 @@
+/* ==========================================================================
+   1. VARIABLES & THEMES (Dark/Light Fantasy Interface Palette)
+   ========================================================================== */
+:root {
+    --bg-color: #06040a;
+    --bg-gradient: radial-gradient(circle at center, #1b0e2b 0%, #06040a 100%);
+    --card-bg: #140b22;
+    --text-main: #f1f0f5;
+    --text-muted: #a097b2;
+    --accent-color: #a855f7; 
+    --accent-glow: rgba(168, 85, 247, 0.25);
+    --border-color: #2e1a47;
+    --search-focus-glow: rgba(168, 85, 247, 0.4);
+    --transition-speed: 0.4s;
+    --ease-magical: cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy dynamic spring curve */
+}
+
+body.light-theme {
+    --bg-color: #f3f4fa;
+    --bg-gradient: linear-gradient(135deg, #f3f4fa 0%, #e0e4f7 100%);
+    --card-bg: #ffffff;
+    --text-main: #2b263d;
+    --text-muted: #79728c;
+    --accent-color: #3b82f6; 
+    --accent-glow: rgba(59, 130, 246, 0.15);
+    --border-color: #cbd5e1;
+    --search-focus-glow: rgba(59, 130, 246, 0.3);
+}
+
+/* ==========================================================================
+   2. BASE STYLES
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: background var(--transition-speed), color var(--transition-speed);
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Infinite animated cosmic background matrix */
+body::before {
+    content: '';
+    position: absolute;
+    inset: -50px;
+    background: var(--bg-gradient);
+    z-index: -2;
+    animation: backgroundPulse 12s ease-in-out infinite alternate;
+}
+
+body::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(var(--accent-color) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.06;
+    pointer-events: none;
+    animation: manaFloat 25s linear infinite;
+    z-index: -1;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ==========================================================================
+   3. NAVIGATION BAR
+   ========================================================================== */
+.navbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1.5rem 2.5rem;
+    animation: slideDownMenu 0.6s var(--ease-magical);
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    transition: color var(--transition-speed), transform 0.3s var(--ease-magical);
+}
+
+.theme-toggle:hover {
+    color: var(--accent-color);
+    transform: scale(1.2) rotate(-30deg);
+}
+
+/* ==========================================================================
+   4. MAIN SEARCH CONTAINER & BRANDING
+   ========================================================================== */
+.search-container {
+    max-width: 650px;
+    width: 90%;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo-area {
+    margin-bottom: 2.5rem;
+    animation: logoEmerge 1s var(--ease-magical);
+}
+
+.logo-text {
+    font-size: 4rem;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+    color: var(--text-main);
+    display: inline-block;
+    animation: textFloat 4s ease-in-out infinite;
+}
+
+.logo-text strong {
+    font-weight: 600;
+}
+
+.logo-accent {
+    color: var(--accent-color);
+    font-weight: 600;
+    text-shadow: 0 0 25px var(--accent-color);
+    letter-spacing: 1px;
+    position: relative;
+}
+
+.tagline {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.6rem;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: 500;
+    opacity: 0;
+    animation: fadeIn 1.2s forwards 0.4s;
+}
+
+/* ==========================================================================
+   5. SEARCH INPUT BAR & INTERLOCK ACTIONS
+   ========================================================================== */
+.search-form {
+    width: 100%;
+    animation: slideUpContent 0.8s var(--ease-magical) 0.1s backwards;
+    position: relative;
+    z-index: 50; 
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px; 
+    padding: 0.3rem 1.5rem;
+    transition: all var(--transition-speed) var(--ease-magical);
+    z-index: 60; 
+}
+
+.search-input-wrapper:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 25px var(--accent-glow);
+    transform: translateY(-2px);
+}
+
+.search-input-wrapper:focus-within {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 35px var(--search-focus-glow);
+    transform: translateY(-2px) scale(1.01);
+}
+
+.search-input-wrapper.dropdown-active {
+    border-bottom-left-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+    border-color: var(--accent-color);
+    box-shadow: 0 -5px 25px var(--accent-glow), -5px 0 25px var(--accent-glow), 5px 0 25px var(--accent-glow);
+    transform: translateY(-2px);
+}
+
+.search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0.8rem 1rem;
+    font-size: 1.05rem;
+    color: var(--text-main);
+    font-family: inherit;
+    letter-spacing: 0.5px;
+}
+
+.voice-search-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem;
+    border-radius: 6px;
+    transition: all 0.3s var(--ease-magical);
+}
+
+.mic-svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--text-muted);
+    transition: fill var(--transition-speed), transform 0.4s var(--ease-magical);
+}
+
+.voice-search-btn:hover {
+    background-color: var(--accent-glow);
+}
+
+.voice-search-btn:hover .mic-svg {
+    fill: var(--accent-color);
+    transform: scale(1.2) rotate(15deg);
+}
+
+.voice-search-btn.listening {
+    animation: magicPulse 1s infinite alternate ease-in-out;
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 1px solid #ef4444;
+}
+
+.voice-search-btn.listening .mic-svg {
+    fill: #ef4444;
+}
+
+.search-buttons {
+    margin-top: 1.75rem;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 10; 
+}
+
+.btn {
+    background-color: rgba(var(--card-bg), 0.5);
+    backdrop-filter: blur(4px);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 0.7rem 2rem;
+    border-radius: 6px; 
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s var(--ease-magical);
+}
+
+.btn:hover {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    border-color: var(--accent-color);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(168, 85, 247, 0.4);
+}
+
+.btn:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.btn-secondary {
+    background: none;
+}
+
+/* ==========================================================================
+   6. PAST MEMORY DROP WINDOW ARCHITECTURE
+   ========================================================================== */
+.recent-searches-dropdown {
+    position: absolute;
+    top: 100%;
+    left: -1px;
+    right: -1px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--accent-color);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 10px 20px var(--accent-glow);
+    z-index: 99999 !important;
+    text-align: left;
+    display: block; 
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: transform 0.4s var(--ease-magical), opacity 0.3s ease;
+    overflow: hidden;
+}
+
+.recent-searches-dropdown.show {
+    pointer-events: auto;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.recent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.5rem 0.5rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: -1px;
+}
+
+.recent-title {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.recent-title i {
+    margin-right: 3px;
+    color: var(--accent-color);
+}
+
+.clear-history-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: inherit;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+    transition: all 0.2s;
+}
+
+.clear-history-btn:hover {
+    text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    transform: scale(1.05);
+}
+
+.recent-tags-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0.5rem;
+}
+
+.recent-dropdown-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: background-color 0.2s, transform 0.3s var(--ease-magical), opacity 0.3s ease;
+}
+
+/* Dynamic staggered load animation for entries */
+.recent-searches-dropdown.show .recent-dropdown-row {
+    opacity: 1;
+    transform: translateX(0);
+    transition-delay: calc(var(--row-index) * 0.04s);
+}
+
+.recent-dropdown-row:hover {
+    background-color: rgba(168, 85, 247, 0.08);
+    padding-left: 1.75rem; /* Micro kinetic shift */
+}
+
+body.light-theme .recent-dropdown-row:hover {
+    background-color: var(--accent-glow);
+}
+
+.recent-row-content {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex: 1;
+}
+
+.recent-search-lens {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: transform 0.3s var(--ease-magical), color 0.2s;
+}
+
+.recent-dropdown-row:hover .recent-search-lens {
+    color: var(--accent-color);
+    transform: scale(1.2) rotate(15deg);
+}
+
+.recent-text-node {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    font-weight: 400;
+}
+
+.recent-row-del {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.recent-row-del:hover {
+    color: #ef4444;
+    transform: scale(1.3) rotate(90deg);
+}
+
+/* ==========================================================================
+   7. SHORTCUT CARDS GRID & CONTAINERS
+   ========================================================================== */
+.shortcuts-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.5rem;
+    margin-top: 3rem;
+    width: 100%;
+    animation: slideUpContent 0.8s var(--ease-magical) 0.3s backwards;
+    position: relative;
+    z-index: 1;
+}
+
+.shortcut-card-container {
+    position: relative;
+    display: inline-block;
+    animation: dynamicEmerge 0.5s var(--ease-magical) backwards;
+    animation-delay: calc(var(--card-index, 0) * 0.05s + 0.3s);
+}
+
+.shortcut-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 1rem 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s var(--ease-magical);
+}
+
+.shortcut-card:hover {
+    background-color: rgba(var(--card-bg), 0.4);
+    backdrop-filter: blur(2px);
+    transform: translateY(-6px);
+}
+
+.shortcut-card span {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 95px;
+    transition: color var(--transition-speed), transform 0.3s var(--ease-magical);
+}
+
+.shortcut-card:hover span {
+    color: var(--text-main);
+    transform: scale(1.05);
+}
+
+.icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 6px; 
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--text-main);
+    transform: rotate(45deg); 
+    transition: all 0.4s var(--ease-magical);
+}
+
+.icon-wrapper * {
+    transform: rotate(-45deg); 
+    transition: transform 0.4s var(--ease-magical);
+}
+
+.shortcut-card:hover .icon-wrapper {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 20px var(--accent-glow);
+    background-color: #1a0f2c;
+    transform: rotate(135deg) scale(1.08); /* Rotates on 2 axes dynamically */
+}
+
+.shortcut-card:hover .icon-wrapper * {
+    transform: rotate(-135deg) scale(1.1);
+}
+
+body.light-theme .shortcut-card:hover .icon-wrapper {
+    background-color: #ffffff;
+}
+
+.custom-brand-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.shortcut-card:hover .icon-wrapper.add { 
+    background-color: transparent; 
+    color: var(--accent-color); 
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.shortcut-card:hover .icon-wrapper.add i {
+    transform: rotate(-135deg) scale(1.2);
+}
+
+.delete-shortcut-btn {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.4) rotate(-45deg);
+    transition: all 0.25s var(--ease-magical);
+    z-index: 10;
+}
+
+.shortcut-card-container:hover .delete-shortcut-btn {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+}
+
+.delete-shortcut-btn:hover {
+    background-color: #dc2626;
+    transform: scale(1.15);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+/* ==========================================================================
+   8. LAYOUT BALANCE STRUCTURE
+   ========================================================================== */
+.footer-spacer {
+    height: 4rem; 
+}
+
+/* ==========================================================================
+   9. INTERFACE SCALING & RENDERING ANIMATIONS
+   ========================================================================== */
+@keyframes backgroundPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.03); }
+}
+
+@keyframes manaFloat {
+    0% { background-position: 0px 0px; }
+    100% { background-position: 50px 100px; }
+}
+
+@keyframes logoEmerge {
+    from { opacity: 0; transform: scale(0.9) translateY(15px); filter: blur(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+@keyframes textFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); text-shadow: 0 15px 30px var(--accent-glow); }
+}
+
+@keyframes slideUpContent {
+    from { opacity: 0; transform: translateY(25px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDownMenu {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dynamicEmerge {
+    from { opacity: 0; transform: scale(0.7) translateY(15px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes magicPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    100% { transform: scale(1.12); box-shadow: 0 0 15px 5px rgba(239, 68, 68, 0.2); }
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+/* ==========================================================================
+   10. RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 640px) {
+    .navbar {
+        padding: 1rem;
+        justify-content: center;
+    }
+    .logo-text { font-size: 3rem; }
+    .shortcuts-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+}
+
+/* ==========================================================================
+   11. REALM PORTAL DROPDOWN
+   ========================================================================== */
+.realm-selector-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-right: 0.5rem;
+    z-index: 110;
+}
+
+.realm-toggle-btn {
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.realm-btn-sphere {
+    width: 32px;
+    height: 32px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--accent-color);
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px var(--accent-glow);
+    transition: all var(--transition-speed) var(--ease-magical);
+}
+
+.realm-toggle-btn:hover .realm-btn-sphere {
+    transform: scale(1.12) rotate(360deg); /* Full spin on hover */
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px var(--accent-color);
+}
+
+.realm-dropdown {
+    position: absolute;
+    top: calc(100% + 16px);
+    left: -15px;
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 210px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), 0 0 20px var(--accent-glow);
+    z-index: 999999 !important; 
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+    pointer-events: none;
+    transition: transform 0.4s var(--ease-magical), opacity 0.3s ease;
+}
+
+.realm-dropdown.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.realm-dropdown-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 0.4rem 0.25rem;
+}
+
+.realm-option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 4px;
+    padding-right: 0.5rem;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: background-color 0.2s, transform 0.3s var(--ease-magical), opacity 0.3s ease;
+}
+
+.realm-dropdown.show .realm-option-row {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: calc(var(--row-index) * 0.03s);
+}
+
+.realm-option-row:hover, .realm-option-row.active {
+    background-color: rgba(168, 85, 247, 0.12);
+}
+
+body.light-theme .realm-option-row:hover, 
+body.light-theme .realm-option-row.active {
+    background-color: var(--accent-glow);
+}
+
+.realm-select-target {
+    flex: 1;
+    background: none !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: row !important; 
+    align-items: center !important;
+    gap: 0.85rem;
+    padding: 0.6rem 0.5rem;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+}
+
+.realm-mini-shard {
+    width: 20px;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s var(--ease-magical);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.realm-option-row:hover .realm-mini-shard {
+    transform: rotate(135deg) scale(1.1);
+    border-color: var(--accent-color);
+}
+
+body.light-theme .realm-mini-shard {
+    background-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.realm-mini-shard span {
+    transform: rotate(-45deg);
+    display: block;
+}
+
+.realm-name-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.realm-option-row:hover .realm-name-text {
+    transform: translateX(2px);
+}
+
+.realm-option-row.active .realm-name-text,
+.realm-option-row:hover .realm-name-text {
+    color: var(--text-main);
+}
+
+.realm-shatter-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.realm-shatter-btn:hover { 
+    color: #ef4444 !important; 
+    transform: scale(1.2) rotate(90deg);
+}
+
+.realm-option.add-realm-action {
+    background: none !important;
+    border: none !important;
+    padding: 0.6rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+    color: var(--text-muted) !important;
+    cursor: pointer;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.5rem;
+    width: 100%;
+    transition: all 0.25s ease;
+}
+
+.realm-option.add-realm-action:hover {
+    color: var(--text-main) !important;
+    background-color: var(--accent-glow) !important;
+    padding-left: 0.85rem;
+}
+
+/* ==========================================================================
+   12. UNIFIED MODAL WINDOW
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(6, 4, 10, 0.85); 
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000; 
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, backdrop-filter 0.4s ease;
+}
+
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+.modal-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px; 
+    padding: 2rem;
+    width: 90%;
+    max-width: 440px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px var(--accent-glow);
+    transform: scale(0.85) translateY(30px);
+    transition: transform 0.5s var(--ease-magical);
+}
+
+.modal-overlay.active .modal-card {
+    transform: scale(1) translateY(0);
+}
+
+.modal-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--text-main);
+    margin-bottom: 1.75rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.6rem;
+}
+
+.modal-field { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+.modal-field label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 600; }
+.modal-field input {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-family: inherit;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.modal-field input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 12px var(--accent-glow);
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-btn {
+    border: none;
+    padding: 0.65rem 1.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s var(--ease-magical);
+}
+
+.modal-btn-cancel { background: none; color: var(--text-muted); }
+.modal-btn-cancel:hover { color: #ef4444; transform: scale(1.05); }
+.modal-btn-confirm { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
+.modal-btn-confirm:hover { background-color: var(--accent-color); color: #ffffff; border-color: var(--accent-color); transform: translateY(-2px); box-shadow: 0 5px 15px var(--accent-glow); }
+
+.realm-icon-rotate { transform: rotate(-45deg) !important; width: 12px !important; height: 12px !important; }
+
+.edit-shortcut-btn {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.4) rotate(45deg);
+    transition: all 0.25s var(--ease-magical);
+    z-index: 10;
+}
+
+.shortcut-card-container:hover .edit-shortcut-btn { opacity: 1; transform: scale(1) rotate(0deg); }
+.edit-shortcut-btn:hover { transform: scale(1.15); box-shadow: 0 0 8px var(--accent-glow); }
+
+.realm-action-buttons { display: flex; align-items: center; gap: 0.25rem; }
+.realm-edit-btn { background: none !important; border: none !important; color: var(--text-muted) !important; cursor: pointer; padding: 0.25rem; transition: all 0.2s; }
+.realm-edit-btn:hover { color: var(--accent-color) !important; transform: scale(1.2); }

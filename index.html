@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Re:Search — Starting Search from Zero</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-right">
+            <button class="theme-toggle" aria-label="Toggle Theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="search-container">
+        <div class="logo-area">
+            <span class="logo-text">Re<strong><span class="logo-accent">:Search</span></strong></span>
+            <p class="tagline">Starting Search from Zero</p>
+        </div>
+
+        <form class="search-form" id="master-search-form" action="https://www.google.com/search" method="GET">
+            <div class="search-input-wrapper" id="search-box-wrapper">
+                
+                <div class="realm-selector-container">
+                    <button type="button" class="realm-toggle-btn" id="realm-btn" title="Shift Realm Focus">
+                        <div class="realm-btn-sphere" id="realm-btn-sphere-content">G</div>
+                    </button>
+                    <div class="realm-dropdown" id="realm-dropdown">
+                        <div id="realm-options-wrapper"></div>
+                        <div class="realm-dropdown-divider"></div>
+                        <button type="button" class="realm-option add-realm-action" id="forge-realm-trigger">
+                            <i class="fas fa-plus-circle"></i> Forge Realm
+                        </button>
+                    </div>
+                </div>
+                
+                <input type="text" name="q" id="search-input" class="search-input" placeholder="Query the magical scroll... (Press '/' to focus)" autofocus autocomplete="off">
+                
+                <button type="button" id="voice-btn" class="voice-search-btn" title="Chant your command...">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="mic-svg">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+
+                <!-- Past Memory Context Window -->
+                <div id="recent-searches" class="recent-searches-dropdown">
+                    <div class="recent-header">
+                        <span class="recent-title"><i class="fas fa-history"></i> Past Memory</span>
+                        <button type="button" id="clear-history-btn" class="clear-history-btn">Wipe All</button>
+                    </div>
+                    <div id="recent-tags-wrapper" class="recent-tags-wrapper"></div>
+                </div>
+            </div>
+            
+            <div class="search-buttons">
+                <button type="submit" class="btn">Return With Results</button>
+                <button type="button" class="btn btn-secondary" id="lucky-btn">I'm Feeling Lucky</button>
+            </div>
+        </form>
+
+        <section class="shortcuts-grid">
+            <button class="shortcut-card add-shortcut" id="add-shortcut-trigger">
+                <div class="icon-wrapper add"><i class="fas fa-plus"></i></div>
+                <span>Add Insignia</span>
+            </button>
+        </section>
+    </main>
+
+    <div class="modal-overlay" id="forge-modal">
+        <div class="modal-card">
+            <h3 class="modal-title" id="modal-headline">Forge New Matrix</h3>
+            <input type="hidden" id="forge-type" value="shortcut">
+            <input type="hidden" id="forge-edit-id" value="">
+
+            <div class="modal-field">
+                <label for="forge-name" id="label-name">Descriptor Name</label>
+                <input type="text" id="forge-name" placeholder="e.g., GitHub">
+            </div>
+            
+            <div class="modal-field">
+                <label for="forge-url" id="label-url">Dimensional Nexus URL</label>
+                <input type="text" id="forge-url" placeholder="e.g., github.com">
+                <p class="field-help" id="forge-help-text"></p>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="modal-btn modal-btn-cancel" id="modal-cancel">Dispel</button>
+                <button type="button" class="modal-btn modal-btn-confirm" id="modal-confirm">Forge</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-spacer"></div>
+
+    <script>
+        // ==========================================================================
+        // 1. Theme Configuration
+        // ==========================================================================
+        const themeToggle = document.querySelector('.theme-toggle');
+        const icon = themeToggle.querySelector('i');
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            icon.className = document.body.classList.contains('light-theme') ? 'fas fa-sun' : 'fas fa-moon';
+        });
+
+        // ==========================================================================
+        // 2. Core Databases (LocalStorage)
+        // ==========================================================================
+        const defaultRealms = [
+            { id: "realm-google", name: "Google", url: "https://www.google.com/search", param: "q" },
+            { id: "realm-youtube", name: "YouTube", url: "https://www.youtube.com/results", param: "search_query" },
+            { id: "realm-wikipedia", name: "Wikipedia", url: "https://en.wikipedia.org/w/index.php", param: "search" }
+        ];
+
+        const defaultShortcuts = [
+            { id: "def-github", name: "GitHub", url: "github.com" },
+            { id: "def-youtube", name: "YouTube", url: "youtube.com" },
+            { id: "def-stackoverflow", name: "Stack Overflow", url: "stackoverflow.com" },
+            { id: "def-reddit", name: "Reddit", url: "reddit.com" }
+        ];
+
+        // ==========================================================================
+        // 3. Dynamic Realm Engine Architecture
+        // ==========================================================================
+        const realmBtn = document.getElementById('realm-btn');
+        const realmBtnSphereContent = document.getElementById('realm-btn-sphere-content');
+        const realmDropdown = document.getElementById('realm-dropdown');
+        const realmOptionsWrapper = document.getElementById('realm-options-wrapper');
+        const searchForm = document.getElementById('master-search-form');
+        const searchInput = document.getElementById('search-input');
+        const searchBoxWrapper = document.getElementById('search-box-wrapper');
+        const recentContainer = document.getElementById('recent-searches');
+        
+        let activeRealmId = localStorage.getItem('activeRealmId') || 'realm-google';
+
+        function extractDomain(url) {
+            let domain = url.replace(/^(https?:\/\/)?(www\.)?/, "").split('/')[0].split('?')[0];
+            return domain || "google.com";
+        }
+
+        function loadRealms() {
+            let savedRealms = JSON.parse(localStorage.getItem('customRealms')) || defaultRealms;
+            localStorage.setItem('customRealms', JSON.stringify(savedRealms));
+            
+            realmOptionsWrapper.innerHTML = '';
+            
+            if (!savedRealms.some(r => r.id === activeRealmId)) {
+                activeRealmId = savedRealms[0].id;
+            }
+
+            savedRealms.forEach((realm, index) => {
+                const isActive = realm.id === activeRealmId;
+                const domain = extractDomain(realm.url);
+                const iconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
+                
+                const optionRow = document.createElement('div');
+                optionRow.className = `realm-option-row ${isActive ? 'active' : ''}`;
+                optionRow.style.setProperty('--row-index', index);
+                
+                optionRow.innerHTML = `
+                    <button type="button" class="realm-select-target" data-id="${realm.id}">
+                        <div class="realm-mini-shard">
+                            <img src="${iconUrl}" class="custom-brand-icon realm-icon-rotate" alt="${realm.name}">
+                        </div>
+                        <span class="realm-name-text">${realm.name}</span>
+                    </button>
+                    <div class="realm-action-buttons">
+                        ${!realm.id.startsWith('realm-') ? `
+                            <button type="button" class="realm-edit-btn" data-id="${realm.id}" title="Alter Realm"><i class="fas fa-pen" style="font-size:10px;"></i></button>
+                            <button type="button" class="realm-shatter-btn" data-id="${realm.id}" title="Shatter Realm">&times;</button>
+                        ` : ''}
+                    </div>
+                `;
+
+                if (isActive) {
+                    searchForm.action = realm.url;
+                    searchInput.name = realm.param;
+                    realmBtnSphereContent.innerHTML = `<img src="${iconUrl}" class="custom-brand-icon" style="width:16px; height:16px;" alt="${realm.name}">`;
+                }
+
+                optionRow.querySelector('.realm-select-target').addEventListener('click', () => {
+                    activeRealmId = realm.id;
+                    localStorage.setItem('activeRealmId', activeRealmId);
+                    loadRealms();
+                    searchInput.focus();
+                });
+
+                const editBtn = optionRow.querySelector('.realm-edit-btn');
+                if (editBtn) {
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openModal('realm', realm.id);
+                    });
+                }
+
+                const deleteBtn = optionRow.querySelector('.realm-shatter-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        removeRealm(realm.id);
+                    });
+                }
+
+                realmOptionsWrapper.appendChild(optionRow);
+            });
+        }
+
+        function removeRealm(id) {
+            let savedRealms = JSON.parse(localStorage.getItem('customRealms')) || [];
+            savedRealms = savedRealms.filter(r => r.id !== id);
+            localStorage.setItem('customRealms', JSON.stringify(savedRealms));
+            if (activeRealmId === id) activeRealmId = 'realm-google';
+            loadRealms();
+        }
+
+        realmBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = realmDropdown.classList.contains('show');
+            if (!isOpen) {
+                realmDropdown.classList.add('show');
+                recentContainer.classList.remove('show');
+                searchBoxWrapper.classList.remove('dropdown-active');
+            } else {
+                realmDropdown.classList.remove('show');
+            }
+        });
+
+        // ==========================================================================
+        // 4. Global Hotkeys & Dropdown Blur Listeners
+        // ==========================================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement !== searchInput) {
+                e.preventDefault();
+                searchInput.focus();
+            }
+            if (e.key === 'Escape') {
+                realmDropdown.classList.remove('show');
+                recentContainer.classList.remove('show');
+                searchBoxWrapper.classList.remove('dropdown-active');
+                closeModal();
+                if (document.activeElement === searchInput) {
+                    searchInput.blur();
+                }
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-input-wrapper')) {
+                recentContainer.classList.remove('show');
+                searchBoxWrapper.classList.remove('dropdown-active');
+            }
+            if (!e.target.closest('.realm-selector-container')) {
+                realmDropdown.classList.remove('show');
+            }
+        });
+
+        // ==========================================================================
+        // 5. Unified Modal Construction Engine
+        // ==========================================================================
+        const forgeModal = document.getElementById('forge-modal');
+        const modalHeadline = document.getElementById('modal-headline');
+        const forgeType = document.getElementById('forge-type');
+        const forgeEditId = document.getElementById('forge-edit-id');
+        const forgeName = document.getElementById('forge-name');
+        const forgeUrl = document.getElementById('forge-url');
+        const forgeHelpText = document.getElementById('forge-help-text');
+        const labelName = document.getElementById('label-name');
+        const labelUrl = document.getElementById('label-url');
+        
+        const addShortcutTrigger = document.getElementById('add-shortcut-trigger');
+        const forgeRealmTrigger = document.getElementById('forge-realm-trigger');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalConfirm = document.getElementById('modal-confirm');
+
+        function openModal(type, editId = null) {
+            forgeType.value = type;
+            forgeEditId.value = editId || '';
+            forgeModal.classList.add('active');
+            
+            let existingData = null;
+            if (editId) {
+                if (type === 'shortcut') {
+                    const saved = JSON.parse(localStorage.getItem('customShortcuts')) || defaultShortcuts;
+                    existingData = saved.find(item => item.id === editId);
+                } else {
+                    const savedRealms = JSON.parse(localStorage.getItem('customRealms')) || defaultRealms;
+                    existingData = savedRealms.find(item => item.id === editId);
+                }
+            }
+            
+            if (type === 'shortcut') {
+                modalHeadline.textContent = editId ? "Alter Insignia Matrix" : "Forge New Insignia";
+                labelName.textContent = "Descriptor Name";
+                labelUrl.textContent = "Dimensional Nexus URL";
+                forgeName.placeholder = "e.g., GitHub";
+                forgeUrl.placeholder = "e.g., github.com";
+                forgeHelpText.textContent = "";
+            } else {
+                modalHeadline.textContent = editId ? "Alter Realm Portal" : "Forge Realm Portal";
+                labelName.textContent = "Realm Name";
+                labelUrl.textContent = "Search Query URL Base";
+                forgeName.placeholder = "e.g., DuckDuckGo";
+                forgeUrl.placeholder = "e.g., duckduckgo.com";
+                forgeHelpText.textContent = "Note: Form queries route using standard 'q=' syntax strings.";
+            }
+
+            if (existingData) {
+                forgeName.value = existingData.name;
+                forgeUrl.value = existingData.url;
+                modalConfirm.textContent = "Apply Changes";
+            } else {
+                forgeName.value = '';
+                forgeUrl.value = '';
+                modalConfirm.textContent = "Forge";
+            }
+
+            setTimeout(() => forgeName.focus(), 50);
+        }
+
+        function closeModal() {
+            forgeModal.classList.remove('active');
+            forgeName.value = '';
+            forgeUrl.value = '';
+            forgeEditId.value = '';
+        }
+
+        addShortcutTrigger.addEventListener('click', () => openModal('shortcut'));
+        forgeRealmTrigger.addEventListener('click', () => openModal('realm'));
+        modalCancel.addEventListener('click', closeModal);
+
+        modalConfirm.addEventListener('click', () => {
+            const name = forgeName.value.trim();
+            const url = forgeUrl.value.trim();
+            const editId = forgeEditId.value;
+            if (!name || !url) return;
+
+            if (forgeType.value === 'shortcut') {
+                let saved = JSON.parse(localStorage.getItem('customShortcuts')) || defaultShortcuts;
+                if (editId) {
+                    saved = saved.map(item => item.id === editId ? { ...item, name, url } : item);
+                } else {
+                    saved.push({ id: 'user-sc-' + Date.now(), name, url });
+                }
+                localStorage.setItem('customShortcuts', JSON.stringify(saved));
+                loadShortcuts();
+            } else {
+                let savedRealms = JSON.parse(localStorage.getItem('customRealms')) || defaultRealms;
+                let cleanUrl = url;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    cleanUrl = 'https://' + url;
+                }
+                if (!cleanUrl.includes('?') && !cleanUrl.includes('/search') && !cleanUrl.includes('/results')) {
+                    if (!cleanUrl.endsWith('/')) cleanUrl += '/';
+                    cleanUrl += 'search';
+                }
+
+                if (editId) {
+                    savedRealms = savedRealms.map(item => item.id === editId ? { ...item, name, url: cleanUrl } : item);
+                } else {
+                    savedRealms.push({
+                        id: 'user-realm-' + Date.now(),
+                        name,
+                        url: cleanUrl,
+                        param: 'q'
+                    });
+                }
+                localStorage.setItem('customRealms', JSON.stringify(savedRealms));
+                loadRealms();
+            }
+            closeModal();
+        });
+
+        // ==========================================================================
+        // 6. Dynamic Shortcuts Architecture
+        // ==========================================================================
+        const shortcutsGrid = document.querySelector('.shortcuts-grid');
+
+        function createShortcutCard(id, name, url, index) {
+            const div = document.createElement('div');
+            div.className = 'shortcut-card-container';
+            div.dataset.id = id;
+            div.style.setProperty('--card-index', index);
+
+            const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
+            let domain = extractDomain(url);
+            let innerIcon = `<img src="https://www.google.com/s2/favicons?sz=64&domain=${domain}" class="custom-brand-icon" alt="${name}">`;
+
+            div.innerHTML = `
+                <a href="${cleanUrl}" class="shortcut-card">
+                    <div class="icon-wrapper custom-avatar">
+                        ${innerIcon}
+                    </div>
+                    <span>${name}</span>
+                </a>
+                <button class="edit-shortcut-btn" title="Alter insignia"><i class="fas fa-pen"></i></button>
+                <button class="delete-shortcut-btn" title="Shatter insignia">&times;</button>
+            `;
+
+            div.querySelector('.edit-shortcut-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                openModal('shortcut', id);
+            });
+
+            div.querySelector('.delete-shortcut-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeShortcut(id);
+            });
+            
+            shortcutsGrid.insertBefore(div, addShortcutTrigger);
+        }
+
+        function loadShortcuts() {
+            const existingCards = shortcutsGrid.querySelectorAll('.shortcut-card-container');
+            existingCards.forEach(card => card.remove());
+            let saved = JSON.parse(localStorage.getItem('customShortcuts')) || defaultShortcuts;
+            localStorage.setItem('customShortcuts', JSON.stringify(saved));
+            saved.forEach((shortcut, index) => createShortcutCard(shortcut.id, shortcut.name, shortcut.url, index));
+        }
+
+        function removeShortcut(id) {
+            let saved = JSON.parse(localStorage.getItem('customShortcuts')) || [];
+            saved = saved.filter(item => item.id !== id);
+            localStorage.setItem('customShortcuts', JSON.stringify(saved));
+            loadShortcuts();
+        }
+
+        // ==========================================================================
+        // 7. Past Memory Dropdown Logic
+        // ==========================================================================
+        const recentTagsWrapper = document.getElementById('recent-tags-wrapper');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+
+        function displayRecentSearches() {
+            const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            recentTagsWrapper.innerHTML = ''; 
+
+            if (history.length === 0) {
+                recentContainer.classList.remove('show');
+                searchBoxWrapper.classList.remove('dropdown-active');
+                return;
+            }
+
+            history.forEach((term, index) => {
+                const row = document.createElement('div');
+                row.className = 'recent-dropdown-row';
+                row.style.setProperty('--row-index', index);
+                row.innerHTML = `
+                    <div class="recent-row-content">
+                        <i class="fas fa-search recent-search-lens"></i>
+                        <span class="recent-text-node">${term}</span>
+                    </div>
+                    <button type="button" class="recent-row-del" title="Remove query">&times;</button>
+                `;
+
+                row.querySelector('.recent-row-content').addEventListener('click', () => {
+                    searchInput.value = term;
+                    saveSearchQuery(term);
+                    searchForm.submit();
+                });
+
+                row.querySelector('.recent-row-del').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeSearchTerm(term);
+                });
+
+                recentTagsWrapper.appendChild(row);
+            });
+        }
+
+        function saveSearchQuery(query) {
+            if (!query || !query.trim()) return;
+            let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            history = history.filter(item => item.toLowerCase() !== query.trim().toLowerCase());
+            history.unshift(query.trim());
+            if (history.length > 6) history.pop();
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+            displayRecentSearches();
+        }
+
+        function removeSearchTerm(term) {
+            let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            history = history.filter(item => item.toLowerCase() !== term.toLowerCase());
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+            displayRecentSearches();
+            
+            if(history.length === 0) {
+                recentContainer.classList.remove('show');
+                searchBoxWrapper.classList.remove('dropdown-active');
+            } else {
+                searchInput.focus();
+            }
+        }
+
+        searchInput.addEventListener('focus', () => {
+            const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            if (history.length > 0) {
+                recentContainer.classList.add('show');
+                searchBoxWrapper.classList.add('dropdown-active');
+                realmDropdown.classList.remove('show');
+            }
+        });
+
+        searchForm.addEventListener('submit', () => saveSearchQuery(searchInput.value));
+        
+        if (clearHistoryBtn) {
+            clearHistoryBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                localStorage.removeItem('searchHistory');
+                displayRecentSearches();
+            });
+        }
+
+        // ==========================================================================
+        // 8. Voice Engine & I'm Feeling Lucky Actions 
+        // ==========================================================================
+        const voiceBtn = document.getElementById('voice-btn');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            voiceBtn.addEventListener('click', () => recognition.start());
+
+            recognition.onstart = () => {
+                voiceBtn.classList.add('listening');
+                searchInput.placeholder = "Chant your search intent now...";
+                searchInput.value = "";
+            };
+            recognition.onend = () => {
+                voiceBtn.classList.remove('listening');
+                searchInput.placeholder = "Query the magical scroll...";
+            };
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                searchInput.value = transcript;
+                saveSearchQuery(transcript);
+                setTimeout(() => searchForm.submit(), 500);
+            };
+        } else {
+            voiceBtn.style.display = 'none';
+        }
+
+        document.getElementById('lucky-btn').addEventListener('click', () => {
+            const query = searchInput.value.trim();
+            if (query) {
+                saveSearchQuery(query);
+                window.location.href = `https://www.google.com/search?btnI=1&q=${encodeURIComponent(query)}`;
+            } else {
+                window.location.href = 'https://www.wikipedia.org/wiki/Special:Random';
+            }
+        });
+
+        // Initial Load Hooks
+        loadRealms();
+        loadShortcuts();
+        displayRecentSearches();
+    </script>
+</body>
+</html>
