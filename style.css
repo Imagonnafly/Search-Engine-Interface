@@ -12,7 +12,7 @@
     --border-color: #2e1a47;
     --search-focus-glow: rgba(168, 85, 247, 0.4);
     --transition-speed: 0.4s;
-    --ease-magical: cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy dynamic spring curve */
+    --ease-magical: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 body.light-theme {
@@ -49,7 +49,6 @@ body {
     position: relative;
 }
 
-/* Infinite animated cosmic background matrix */
 body::before {
     content: '';
     position: absolute;
@@ -286,7 +285,7 @@ a {
 }
 
 /* ==========================================================================
-   6. PAST MEMORY DROP WINDOW ARCHITECTURE
+   6. CONTEXT DROPDOWN MATRIX ARCHITECTURE (Past Memory & Predictive Intents)
    ========================================================================== */
 .recent-searches-dropdown {
     position: absolute;
@@ -323,16 +322,22 @@ a {
     margin-top: -1px;
 }
 
+.recent-header.hide-clear .clear-history-btn {
+    display: none;
+}
+
 .recent-title {
     font-size: 0.65rem;
     color: var(--text-muted);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .recent-title i {
-    margin-right: 3px;
     color: var(--accent-color);
 }
 
@@ -372,7 +377,6 @@ a {
     transition: background-color 0.2s, transform 0.3s var(--ease-magical), opacity 0.3s ease;
 }
 
-/* Dynamic staggered load animation for entries */
 .recent-searches-dropdown.show .recent-dropdown-row {
     opacity: 1;
     transform: translateX(0);
@@ -381,7 +385,7 @@ a {
 
 .recent-dropdown-row:hover {
     background-color: rgba(168, 85, 247, 0.08);
-    padding-left: 1.75rem; /* Micro kinetic shift */
+    padding-left: 1.75rem;
 }
 
 body.light-theme .recent-dropdown-row:hover {
@@ -395,13 +399,18 @@ body.light-theme .recent-dropdown-row:hover {
     flex: 1;
 }
 
-.recent-search-lens {
+.recent-search-lens, .autocomplete-suggest-lens {
     font-size: 0.8rem;
     color: var(--text-muted);
     transition: transform 0.3s var(--ease-magical), color 0.2s;
 }
 
-.recent-dropdown-row:hover .recent-search-lens {
+.autocomplete-suggest-lens {
+    color: var(--accent-color);
+}
+
+.recent-dropdown-row:hover .recent-search-lens,
+.recent-dropdown-row:hover .autocomplete-suggest-lens {
     color: var(--accent-color);
     transform: scale(1.2) rotate(15deg);
 }
@@ -429,7 +438,7 @@ body.light-theme .recent-dropdown-row:hover {
 }
 
 /* ==========================================================================
-   7. SHORTCUT CARDS GRID & CONTAINERS
+   7. SHORTCUT CARDS GRID & CONTAINERS (Mobile Adaptive Matrix)
    ========================================================================== */
 .shortcuts-grid {
     display: grid;
@@ -460,9 +469,10 @@ body.light-theme .recent-dropdown-row:hover {
     padding: 1rem 0.5rem;
     border-radius: 8px;
     transition: all 0.3s var(--ease-magical);
+    -webkit-tap-highlight-color: transparent; 
 }
 
-.shortcut-card:hover {
+.shortcut-card:hover, .shortcut-card:focus-within {
     background-color: rgba(var(--card-bg), 0.4);
     backdrop-filter: blur(2px);
     transform: translateY(-6px);
@@ -481,7 +491,7 @@ body.light-theme .recent-dropdown-row:hover {
     transition: color var(--transition-speed), transform 0.3s var(--ease-magical);
 }
 
-.shortcut-card:hover span {
+.shortcut-card:hover span, .shortcut-card:focus-within span {
     color: var(--text-main);
     transform: scale(1.05);
 }
@@ -506,18 +516,19 @@ body.light-theme .recent-dropdown-row:hover {
     transition: transform 0.4s var(--ease-magical);
 }
 
-.shortcut-card:hover .icon-wrapper {
+.shortcut-card:hover .icon-wrapper, .shortcut-card:focus-within .icon-wrapper {
     border-color: var(--accent-color);
     box-shadow: 0 0 20px var(--accent-glow);
     background-color: #1a0f2c;
-    transform: rotate(135deg) scale(1.08); /* Rotates on 2 axes dynamically */
+    transform: rotate(135deg) scale(1.08); 
 }
 
-.shortcut-card:hover .icon-wrapper * {
+.shortcut-card:hover .icon-wrapper *, .shortcut-card:focus-within .icon-wrapper * {
     transform: rotate(-135deg) scale(1.1);
 }
 
-body.light-theme .shortcut-card:hover .icon-wrapper {
+body.light-theme .shortcut-card:hover .icon-wrapper,
+body.light-theme .shortcut-card:focus-within .icon-wrapper {
     background-color: #ffffff;
 }
 
@@ -527,47 +538,80 @@ body.light-theme .shortcut-card:hover .icon-wrapper {
     object-fit: contain;
 }
 
-.shortcut-card:hover .icon-wrapper.add { 
+.shortcut-card:hover .icon-wrapper.add, .shortcut-card:focus-within .icon-wrapper.add { 
     background-color: transparent; 
     color: var(--accent-color); 
     border-color: var(--accent-color);
     box-shadow: 0 0 15px var(--accent-glow);
 }
 
-.shortcut-card:hover .icon-wrapper.add i {
+.shortcut-card:hover .icon-wrapper.add i, .shortcut-card:focus-within .icon-wrapper.add i {
     transform: rotate(-135deg) scale(1.2);
 }
 
-.delete-shortcut-btn {
+.delete-shortcut-btn, .edit-shortcut-btn {
     position: absolute;
-    top: -2px;
-    right: -2px;
     background-color: #ef4444;
     color: white;
     border: none;
     border-radius: 4px;
-    width: 18px;
-    height: 18px;
-    font-size: 12px;
+    width: 22px; 
+    height: 22px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
-    transform: scale(0.4) rotate(-45deg);
-    transition: all 0.25s var(--ease-magical);
     z-index: 10;
+    transition: all 0.25s var(--ease-magical);
 }
 
-.shortcut-card-container:hover .delete-shortcut-btn {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
+.delete-shortcut-btn {
+    top: -2px;
+    right: -2px;
+    font-size: 12px;
+}
+
+.edit-shortcut-btn {
+    top: -2px;
+    left: -2px;
+    background-color: var(--accent-color);
+    font-size: 9px;
+}
+
+@media (hover: hover) {
+    .delete-shortcut-btn {
+        opacity: 0;
+        transform: scale(0.4) rotate(-45deg);
+    }
+    .edit-shortcut-btn {
+        opacity: 0;
+        transform: scale(0.4) rotate(45deg);
+    }
+    .shortcut-card-container:hover .delete-shortcut-btn {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+    .shortcut-card-container:hover .edit-shortcut-btn {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@media (hover: none) {
+    .delete-shortcut-btn, .edit-shortcut-btn {
+        opacity: 0.85;
+        transform: scale(1) rotate(0deg);
+    }
 }
 
 .delete-shortcut-btn:hover {
     background-color: #dc2626;
     transform: scale(1.15);
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+.edit-shortcut-btn:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 8px var(--accent-glow);
 }
 
 /* ==========================================================================
@@ -625,15 +669,80 @@ body.light-theme .shortcut-card:hover .icon-wrapper {
 }
 
 /* ==========================================================================
-   10. RESPONSIVE DESIGN
+   10. MEDIA BREAKPOINTS & VIEWPORT ADAPTATIONS (Desktop + Mobile Fluidity)
    ========================================================================== */
-@media (max-width: 640px) {
-    .navbar {
-        padding: 1rem;
-        justify-content: center;
+@media (max-width: 768px) {
+    .search-container {
+        width: 92%;
     }
-    .logo-text { font-size: 3rem; }
-    .shortcuts-grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .logo-text {
+        font-size: 3.2rem;
+    }
+    .shortcuts-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .navbar {
+        padding: 1rem 1.5rem;
+    }
+    
+    .logo-text {
+        font-size: 2.5rem;
+        letter-spacing: -1px;
+    }
+    
+    .tagline {
+        font-size: 0.65rem;
+        letter-spacing: 3px;
+    }
+
+    .search-input-wrapper {
+        padding: 0.2rem 0.75rem;
+    }
+
+    .search-input {
+        font-size: 0.95rem;
+        padding: 0.7rem 0.5rem;
+    }
+
+    .realm-dropdown {
+        left: -10px;
+        min-width: 190px;
+    }
+
+    .shortcuts-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .icon-wrapper {
+        width: 46px;
+        height: 46px;
+    }
+
+    .shortcut-card span {
+        font-size: 0.7rem;
+        max-width: 80px;
+    }
+
+    .search-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 0.8rem 1.5rem;
+    }
+    
+    .modal-card {
+        padding: 1.5rem;
+    }
 }
 
 /* ==========================================================================
@@ -656,6 +765,7 @@ body.light-theme .shortcut-card:hover .icon-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .realm-btn-sphere {
@@ -675,7 +785,7 @@ body.light-theme .shortcut-card:hover .icon-wrapper {
 }
 
 .realm-toggle-btn:hover .realm-btn-sphere {
-    transform: scale(1.12) rotate(360deg); /* Full spin on hover */
+    transform: scale(1.12) rotate(360deg);
     border-color: var(--accent-color);
     box-shadow: 0 0 15px var(--accent-color);
 }
@@ -750,6 +860,7 @@ body.light-theme .realm-option-row.active {
     cursor: pointer;
     text-align: left;
     color: inherit;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .realm-mini-shard {
@@ -808,6 +919,7 @@ body.light-theme .realm-mini-shard {
     padding: 0 0.25rem;
     line-height: 1;
     transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .realm-shatter-btn:hover { 
@@ -831,6 +943,7 @@ body.light-theme .realm-mini-shard {
     gap: 0.5rem;
     width: 100%;
     transition: all 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .realm-option.add-realm-action:hover {
@@ -904,6 +1017,16 @@ body.light-theme .realm-mini-shard {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+.field-help {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 0.2rem;
+    line-height: 1.4;
+}
+
+.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+
 .modal-btn {
     border: none;
     padding: 0.65rem 1.75rem;
@@ -914,6 +1037,7 @@ body.light-theme .realm-mini-shard {
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s var(--ease-magical);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .modal-btn-cancel { background: none; color: var(--text-muted); }
@@ -923,30 +1047,6 @@ body.light-theme .realm-mini-shard {
 
 .realm-icon-rotate { transform: rotate(-45deg) !important; width: 12px !important; height: 12px !important; }
 
-.edit-shortcut-btn {
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    width: 18px;
-    height: 18px;
-    font-size: 9px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: scale(0.4) rotate(45deg);
-    transition: all 0.25s var(--ease-magical);
-    z-index: 10;
-}
-
-.shortcut-card-container:hover .edit-shortcut-btn { opacity: 1; transform: scale(1) rotate(0deg); }
-.edit-shortcut-btn:hover { transform: scale(1.15); box-shadow: 0 0 8px var(--accent-glow); }
-
 .realm-action-buttons { display: flex; align-items: center; gap: 0.25rem; }
-.realm-edit-btn { background: none !important; border: none !important; color: var(--text-muted) !important; cursor: pointer; padding: 0.25rem; transition: all 0.2s; }
+.realm-edit-btn { background: none !important; border: none !important; color: var(--text-muted) !important; cursor: pointer; padding: 0.25rem; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
 .realm-edit-btn:hover { color: var(--accent-color) !important; transform: scale(1.2); }
